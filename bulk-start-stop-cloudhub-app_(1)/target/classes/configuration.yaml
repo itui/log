@@ -1,0 +1,15 @@
+env:
+  id: "2c5ec9ef-4135-47ec-b4a4-2b9bbea8737b"  
+user:
+  username: "cloudtesting"
+  password: "Nebihaamir@123"
+#  clientid: "10bad438874943fe8ee9405df45a826f"
+#  clientsecret: "deF7301ab2E1407Ea78E7B7eE6A85904"
+apps:
+  ["my-load-app","test45","one-app","one-twi"]
+domain:
+  name: "my-load-app"  
+status: "start"  
+org:
+  domain: "sdhfgkeyrhjhsdg"
+providerId: "a0f69e53-ff04-4945-89b2-a3c9c378777"

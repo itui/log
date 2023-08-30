@@ -1,0 +1,31 @@
+{
+  "configs": [
+    "global.xml",
+    "getDeploymentANDinstanceID.xml",
+    "bulk-start-stop-restart-cloudhubapp.xml"
+  ],
+  "secureProperties": [],
+  "redeploymentEnabled": true,
+  "name": "com.mycompany:bulk-start-stop-restart-cloudhubapp:1.0.0-SNAPSHOT",
+  "minMuleVersion": "4.3.0",
+  "requiredProduct": "MULE_EE",
+  "classLoaderModelLoaderDescriptor": {
+    "id": "mule",
+    "attributes": {
+      "exportedPackages": [],
+      "exportedResources": [
+        "log4j2.xml",
+        "global.xml",
+        "bulk-start-stop-restart-cloudhubapp.xml",
+        "application-types.xml",
+        "configuration.yaml",
+        "examples/deploemnt.json",
+        "getDeploymentANDinstanceID.xml"
+      ]
+    }
+  },
+  "bundleDescriptorLoader": {
+    "id": "mule",
+    "attributes": {}
+  }
+}

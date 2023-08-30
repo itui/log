@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd">
+	<flow name="GetAPILog" doc:id="58b859ed-dfdc-42fc-b2f0-843b2f8e285f" >
+		<http:listener doc:name="Listener" doc:id="c6e1f3dd-7902-46f8-b5ca-7d963b900a9d" config-ref="HTTP_Listener_config" path="/getDep"/>
+		<set-variable value="#[attributes.headers.Authorization]" doc:name="token" doc:id="0267f935-e1da-4827-8c52-b5fa2c285b43" variableName="token"/>
+		<set-variable value='#[p("domain.name")]' doc:name="get appName" doc:id="0d3945b4-15a0-4099-afb3-4905534c31c9" variableName="appName"/>
+		<http:request method="GET" doc:name="Request" doc:id="65abaef2-d75f-4f09-afb1-c50e6c88f4be" config-ref="HTTP_Request_configuration" path="#['/applications/' ++ vars.appName ++ '/deployments']">
+			<http:headers ><![CDATA[#[output application/java
+---
+{
+	"Authorization" : "Bearer " ++ vars.token,
+	"x-anypnt-env-id" : p("env.id")
+}]]]></http:headers>
+			<http:query-params ><![CDATA[#[output application/java
+---
+{
+	"limit" : "1",
+	"Offset" : "0",
+	"orderByDate" : "DESC",
+	"loggingVersion" : "VERSION_2"
+}]]]></http:query-params>
+		</http:request>
+		<set-variable value="#[payload..*instanceId[0]]" doc:name="get app instance id" doc:id="30f989d1-465e-40f2-9a0a-761758ebb369" variableName="instanceID" />
+		<logger level="INFO" doc:name="instanceID" doc:id="a4da0e4d-4386-44cb-b2c1-c7a454473195" message="#[vars.instanceID]"/>
+		<ee:transform doc:name="Transform Message" doc:id="77748975-2729-4c1e-8e3d-57046367bb0a" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+//output application/json
+output text/plain
+
+var myvar = payload..*instanceId[0]
+---
+//payload.data.instances map ((val, index) -> {
+//	instanceID: val.instanceId
+//})
+
+//payload..*instanceId[0] 
+
+//{
+//
+//id: vars.instanceID as Number
+//
+//}
+//trim(payload..*instanceId[0]) as String
+
+payload..*instanceId[0] replace "\"" with ""]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+<!-- [STUDIO:"Logger"]		<logger level="INFO" doc:name="Logger" doc:id="49726fb3-1808-4d7b-9235-824a8b126312" message="#[payload.instanceID]"/> [STUDIO] -->
+<!-- [STUDIO:"url"]		<logger level="INFO" doc:name="url" doc:id="14800d2d-0282-4e66-b947-687d496998b9" message="#['/applications/' ++ vars.appName ++ '/instances/' ++ vars.instanceID ++ '/log-file']"/> [STUDIO] -->
+		<http:request method="GET" doc:name="Request" doc:id="aca84aad-4796-4029-ac79-97cc17ca4898" config-ref="HTTP_Request_configuration" path="#['/applications/' ++ vars.appName ++ '/instances/' ++ vars.instanceID ++ '/log-file']">
+			<http:headers ><![CDATA[#[output application/java
+---
+{
+	"Authorization" : "Bearer " ++ vars.token,
+	"x-anypnt-env-id" : p("env.id")
+}]]]></http:headers>
+		</http:request>
+		<file:write doc:id="94d5d93d-eee0-4d39-a92f-4b2b933d24e6" path="/Users/nebihaamir/Desktop/logs/log"/>
+	</flow>
+</mule>

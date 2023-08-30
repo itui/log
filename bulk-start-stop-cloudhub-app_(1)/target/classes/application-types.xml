@@ -1,0 +1,30 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<types:mule xmlns:types="http://www.mulesoft.org/schema/mule/types">
+  <types:catalog>
+    <types:type name="dep" format="json">
+      <types:shape format="weave" example="examples/deploemnt.json"><![CDATA[%dw 2.0
+
+type dep = {|
+  data: Array<{|    deploymentId: String,     createTime: String,     startTime: String,     endTime: String,     instances: Array<{|      instanceId: String,       publicIPAddress: String,       status: String,       region: String    |}>
+  |}>, 
+  total: Number {"typeId": "int"}
+|} {"example": "{\\\"data\\\":[{\\\"deploymentId\\\":\\\"64ee3ceeb9bf08683ae43077\\\",\\\"createTime\\\":\\\"2023-08-29T18:46:06.232Z\\\",\\\"startTime\\\":\\\"2023-08-29T18:46:07.775Z\\\",\\\"endTime\\\":\\\"2023-08-29T18:48:31.742Z\\\",\\\"instances\\\":[{\\\"instanceId\\\":\\\"64ee3ceeb9bf08683ae43077-0\\\",\\\"publicIPAddress\\\":\\\"52.15.235.89\\\",\\\"status\\\":\\\"STARTED\\\",\\\"region\\\":\\\"us-east-2\\\"}]}],\\\"total\\\":8}"}
+
+]]></types:shape>
+    </types:type>
+  </types:catalog>
+  <types:enrichment select="#77748975-2729-4c1e-8e3d-57046367bb0a">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="dep"/>
+        </types:message>
+      </types:input-event>
+      <types:output-event>
+        <types:message>
+          <types:payload type="dep"/>
+        </types:message>
+      </types:output-event>
+    </types:processor-declaration>
+  </types:enrichment>
+</types:mule>

@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd">
+	<flow name="bulk-start-stop-restart-cloudhubapp-via-usercreds" doc:id="f90878c7-6bd3-4389-a490-7d76a07fe040" >
+		<http:listener doc:name="Listener" doc:id="4d2e288e-f788-4c9a-96f9-30ff4e14b96d" config-ref="HTTP_Listener_config" path="/bulkapi"/>
+<!-- [STUDIO:"user_name"]		<set-variable value="${user.clientid}" doc:name="user_name" doc:id="364439bc-cb48-4c72-98bf-7ab7856d3a68" variableName="user_name"/> [STUDIO] -->
+<!-- [STUDIO:"user_password"]		<set-variable value="${user.clientsecret}" doc:name="user_password" doc:id="932473b0-7ac9-4ceb-9f37-e467b510b143" variableName="user_password"/> [STUDIO] -->
+<!-- [STUDIO:"Cache"]		<ee:cache doc:name="Cache" doc:id="70d0b854-6090-4b11-bc6d-df7fe78c251c" >
+<!&#45;&#45; [STUDIO:"Get the Access_token"]			<http:request method="POST" doc:name="Get the Access_token" doc:id="2fb160a9-62fa-424c-bfa2-1c0740b573c7" config-ref="HTTP_Request_configuration" path="/accounts/login">
+			<http:body><![CDATA[#[output application/json
+&#45;&#45;-
+{
+    "username": vars.user_name,
+    "password": vars.user_password
+}]]]></http:body>
+			<http:headers><![CDATA[#[output application/java
+&#45;&#45;-
+{
+	"Content-Type" : "application/json"
+}]]]></http:headers>
+		</http:request>
+<!&#45;&#45; [STUDIO:"Get_access_token"]			<http:request method="GET" doc:name="Get_access_token" doc:id="d9d73d47-15fe-4823-93f3-df04b746c4d3" config-ref="HTTP_Request_configuration" path="/accounts/api/v2/oauth2/token">
+				<http:body ><![CDATA[#[output application/java
+&#45;&#45;-
+{
+	user_name : vars.user_name,
+	user_password: vars.user_password
+}]]]></http:body>
+				<http:headers ><![CDATA[#[output application/java
+&#45;&#45;-
+{
+	content-type : application/json
+}]]]></http:headers>
+			</http:request>
+		</ee:cache> [STUDIO] -->
+		<set-variable value="#[attributes.headers.Authorization]" doc:name="Access Token Set Variable" doc:id="1c12c718-75da-430e-87c6-96e457d44098" variableName="access_token"/>
+		<logger level="INFO" doc:name="Logger" doc:id="0317f43d-eac4-4967-ade4-9a47f8369e2a" message="#[vars.access_token]"/>
+		<ee:transform doc:name="Transform Message" doc:id="e5af36d6-f0f2-4069-ae40-d9dc4b362f8d" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="apps" ><![CDATA[%dw 2.0
+output application/json
+---
+p("apps") splitBy(",")]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="973719d8-32b3-449e-bc62-b8999558afce" message='#["Application list is " ++ p("apps")]'/>
+		<foreach doc:name="For Each" doc:id="80b2d2ac-3cb2-41fb-a001-1e8bfeaaee70" collection="#[vars.apps]">
+			<http:request method="POST" doc:name="Request" doc:id="d57d68c9-2bbc-41e8-91ca-702532fea3c5" config-ref="HTTP_Request_configuration" path="/applications/{apps}/status" target="results">
+				<http:body ><![CDATA[#[output application/json
+---{
+"status":p("status")	
+}]]]></http:body>
+				<http:headers ><![CDATA[#[output application/java
+---
+{
+	"Authorization" : "Bearer " ++ vars.access_token,
+	"Content-type" : "application/json",
+	"x-anypnt-env-id" : p("env.id")
+
+}]]]></http:headers>
+				<http:uri-params ><![CDATA[#[output application/java
+---
+{
+	"apps" : payload
+}]]]></http:uri-params>
+			</http:request>
+		</foreach>
+		<ee:transform doc:name="Transform Message" doc:id="b8708477-a3cd-464d-9662-49183b9b2aaa" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"Status": "Applications: " ++ p("apps") ++ " successfully " ++ p("status") ++ "ed"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="add21160-0dd1-47f4-95b3-cf3d46fc43e6" message="#[payload]"/>
+	</flow>
+</mule>
